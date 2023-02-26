@@ -1,0 +1,107 @@
+{
+	"name": "meta_filter_setvariable",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "storage",
+						"type": "DatasetReference",
+						"parameters": {
+							"containername": "karthik"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Filter1",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata1').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@endswith(item().name,'.csv' )",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Filter1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "namechange",
+					"value": {
+						"value": "@if(pipeline().parameters.restart,pipeline().parameters.restartdate,utcnow())",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"restart": {
+				"type": "bool",
+				"defaultValue": false
+			},
+			"restartdate": {
+				"type": "string",
+				"defaultValue": "current_date"
+			}
+		},
+		"variables": {
+			"filenames": {
+				"type": "Array"
+			},
+			"filename": {
+				"type": "Array"
+			},
+			"namechange": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-02-26T05:34:56Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
